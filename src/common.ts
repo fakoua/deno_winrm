@@ -1,7 +1,7 @@
 export const DEFAULT_PORT = 5985;
 
 // deno-lint-ignore no-explicit-any
-export type anyany = any
+export type anyany = any // NOSONAR
 
 export type CommandResponse = {
     success: boolean,
