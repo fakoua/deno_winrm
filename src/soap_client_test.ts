@@ -52,7 +52,7 @@ Deno.test("should make a successful HTTP POST request with valid SOAP data and r
   const soap = { test: 1 };
   const soapClient = new SoapClient({
     username: "username",
-    password: "password",
+    password: "password", //NOSONAR
   }, "example.com");
   const response = await soapClient.httpRequest(JSON.stringify(soap));
   assertStringIncludes(response.body, "valid response");
@@ -63,7 +63,7 @@ Deno.test("should make a successful HTTP POST request with 200 Response", async 
   const soap = { test: 1 };
   const soapClient = new SoapClient({
     username: "username",
-    password: "password",
+    password: "password", //NOSONAR
   }, "example.com");
   const response = await soapClient.httpRequest(JSON.stringify(soap));
   assertEquals(response.status, 200);
@@ -74,7 +74,7 @@ Deno.test("should make a successful HTTP POST request unauthorized response", as
   const soap = { test: 2 };
   const soapClient = new SoapClient({
     username: "username1",
-    password: "password1",
+    password: "password1", //NOSONAR
   }, "example.com");
   const response = await soapClient.httpRequest(JSON.stringify(soap));
   assertEquals(response.status, 401);

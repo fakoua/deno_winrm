@@ -59,7 +59,7 @@ Deno.test("Should run a command", async () => {
 
   //Action
   const context = new WinRMContext(
-    { username: "test", password: "test" },
+    { username: "test", password: "test" }, //NOSONAR
     "example.com",
   );
 
