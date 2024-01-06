@@ -96,10 +96,9 @@ export class WinRMContext {
 
       const streams = rResponseDocument["rsp:Stream"] as node;
 
-      const s = streams as node;
       let strBuilder = "";
-      for (const key in s) {
-        const cmd = (s[key] as document)["#text"]?.toString();
+      for (const key in streams) {
+        const cmd = (streams[key] as document)["#text"]?.toString();
         if (cmd !== undefined) {
           strBuilder = `${strBuilder}\r\n${
             new TextDecoder().decode(decodeBase64(cmd))

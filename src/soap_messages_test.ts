@@ -53,7 +53,7 @@ Deno.test("should return a string with a SOAP envelope containing the correct Re
 
   assertStringIncludes(
     result,
-    "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd",
+    "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd", //NOSONAR
   );
 });
 
