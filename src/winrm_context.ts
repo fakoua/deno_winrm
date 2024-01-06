@@ -1,6 +1,7 @@
 import { parse } from "https://deno.land/x/xml@2.1.3/mod.ts";
 import { document, node } from "https://deno.land/x/xml@2.1.3/utils/types.ts";
 import {
+anyany,
   BasicAuthentication,
   CommandResponse,
   constractHost,
@@ -89,13 +90,11 @@ export class WinRMContext {
     const res = await soapClient.httpRequest(soapIn);
 
     if (res.status === 200) {
-      const xmlDoc = parse(res.body);
-      const receiveResponseDocument =
-        ((xmlDoc["s:Envelope"] as document)["s:Body"] as document)[
-          "rsp:ReceiveResponse"
-        ] as document;
+      const xmlDoc = parse(res.body) as anyany
 
-      const streams = receiveResponseDocument["rsp:Stream"];
+        const rResponseDocument = xmlDoc["s:Envelope"]["s:Body"]["rsp:ReceiveResponse"];
+
+      const streams = rResponseDocument["rsp:Stream"] as node;
 
       const s = streams as node;
       let strBuilder = "";
@@ -131,12 +130,8 @@ export class WinRMContext {
     const res = await soapClient.httpRequest(soapIn);
 
     if (res.status === 200) {
-      const xmlDoc = parse(res.body);
-      const commandId =
-        (((xmlDoc["s:Envelope"] as document)["s:Body"] as document)[
-          "rsp:CommandResponse"
-        ] as document)["rsp:CommandId"];
-
+      const xmlDoc = parse(res.body) as anyany;
+        const commandId = xmlDoc["s:Envelope"]["s:Body"]["rsp:CommandResponse"]["rsp:CommandId"]
       return {
         success: true,
         message: commandId ? commandId.toString() : "",
@@ -151,12 +146,8 @@ export class WinRMContext {
     const soapClient = new SoapClient(this.auth, this.host);
     const res = await soapClient.httpRequest(soapIn);
     if (res.status === 200) {
-      const xmlDoc = parse(res.body);
-      const shellId =
-        (((xmlDoc["s:Envelope"] as document)["s:Body"] as document)[
-          "rsp:Shell"
-        ] as document)["rsp:ShellId"];
-
+      const xmlDoc = parse(res.body) as anyany;
+        const shellId = xmlDoc["s:Envelope"]["s:Body"]["rsp:Shell"]["rsp:ShellId"]
       return {
         success: true,
         message: shellId ? shellId.toString() : "",
@@ -186,18 +177,10 @@ export class WinRMContext {
 
   private parseSoapError(soap: string): CommandResponse {
     try {
-      const xmlDoc = parse(soap);
-      const bodyDoc =
-        ((xmlDoc as document)["s:Envelope"] as document)["s:Body"] as document;
-
-      const reason =
-        (((bodyDoc["s:Fault"] as document)["s:Reason"] as document)[
-          "s:Text"
-        ] as document)["#text"]?.toString();
-      const message =
-        (((bodyDoc["s:Fault"] as document)["s:Detail"] as document)[
-          "f:WSManFault"
-        ] as document)["f:Message"]?.toString();
+      const xmlDoc = parse(soap) as anyany;
+        const bodyDoc = xmlDoc["s:Envelope"]["s:Body"]
+        const reason = bodyDoc["s:Fault"]["s:Reason"]["s:Text"]["#text"]?.toString()
+        const message =bodyDoc["s:Fault"]["s:Detail"]["f:WSManFault"]["f:Message"]?.toString()
       const rtnVal: CommandResponse = {
         success: false,
         message: "",

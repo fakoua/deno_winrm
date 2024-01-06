@@ -25,7 +25,6 @@ export function message_shellid(server: string, messageId: string): string {
        </s:Body>
     </s:Envelope>`;
 }
-
 export function message_commandid(
   server: string,
   messageId: string,
@@ -60,7 +59,6 @@ export function message_commandid(
        </s:Body>
     </s:Envelope>`;
 }
-
 export function message_command(
   server: string,
   messageId: string,
@@ -91,7 +89,6 @@ export function message_command(
        </s:Body>
     </s:Envelope>`;
 }
-
 export function message_delete_shellid(
   server: string,
   messageId: string,
