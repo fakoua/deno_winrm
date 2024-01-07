@@ -1,3 +1,4 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fakoua_deno_winrm&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fakoua_deno_winrm)
 # deno_winrm
 deno_winrm is a Deno typescript client for the Windows Remote Management (WinRM) service. It allows you to invoke commands on target Windows machines using Deno.
 
