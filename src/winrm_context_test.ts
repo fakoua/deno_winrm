@@ -69,3 +69,104 @@ Deno.test("Should run a command", async () => {
   assert(res.success);
   mf.uninstall();
 });
+
+Deno.test("ShellId Exception", async () => {
+  //Setup
+  mf.install();
+
+  mf.mock("POST@/wsman", (_req, _) => {
+    if (_req.headers.get("content-length") == "1583") {
+      return new Response("ERROR", {
+        status: 500,
+      });
+    }
+
+    return new Response(`hi`, {
+      status: 200,
+    });
+  });
+
+  //Action
+  const context = new WinRMContext(
+    { username: "test", password: "test" }, //NOSONAR
+    "example.com",
+  );
+
+  const res = await context.runCommand("PING");
+
+  //Assert
+  assert(!res.success);
+  mf.uninstall();
+});
+
+Deno.test("CommandId Exception", async () => {
+  //Setup
+  mf.install();
+
+  mf.mock("POST@/wsman", (_req, _) => {
+    if (_req.headers.get("content-length") == "1583") {
+      return new Response(ResponseShellId, {
+        status: 200,
+      });
+    }
+    if (_req.headers.get("content-length") == "1702") {
+      return new Response("ERROR", {
+        status: 500,
+      });
+    }
+    return new Response(`hi`, {
+      status: 200,
+    });
+  });
+
+  //Action
+  const context = new WinRMContext(
+    { username: "test", password: "test" }, //NOSONAR
+    "example.com",
+  );
+
+  const res = await context.runCommand("PING");
+
+  //Assert
+  assert(!res.success);
+  mf.uninstall();
+});
+
+Deno.test("Command Error", async () => {
+  //Setup
+  mf.install();
+
+  mf.mock("POST@/wsman", (_req, _) => {
+    if (_req.headers.get("content-length") == "1583") {
+      return new Response(ResponseShellId, {
+        status: 200,
+      });
+    }
+    if (_req.headers.get("content-length") == "1702") {
+      return new Response(ResponseCommandId, {
+        status: 200,
+      });
+    }
+
+    if (_req.headers.get("content-length") == "1553") {
+      return new Response("ERROR", {
+        status: 500,
+      });
+    }
+    return new Response(`hi`, {
+      status: 200,
+    });
+  });
+
+  //Action
+  const context = new WinRMContext(
+    { username: "test", password: "test" }, //NOSONAR
+    "example.com",
+  );
+
+  const res = await context.runCommand("PING");
+
+  //Assert
+  assert(!res.success);
+  mf.uninstall();
+});

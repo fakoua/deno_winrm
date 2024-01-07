@@ -22,7 +22,6 @@ function mock1() {
     replyStatus: 200,
     responseBody: "valid response",
   });
-  
 }
 
 function mock2() {
