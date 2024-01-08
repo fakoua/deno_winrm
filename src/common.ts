@@ -29,7 +29,7 @@ export type HttpResponse = {
     body: string,
 }
 
-export function constractHost(host: WinRMHost | string): string {
+export function constructHost(host: WinRMHost | string): string {
     const isStringHost = typeof host === "string";
     const protocol = isStringHost ? "http" : host.protocol;
     const hostname = isStringHost ? host : host.hostname;

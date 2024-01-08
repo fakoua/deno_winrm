@@ -1,7 +1,7 @@
 import { encodeBase64 } from "https://deno.land/std@0.210.0/encoding/base64.ts";
 import {
   BasicAuthentication,
-  constractHost,
+  constructHost,
   HttpResponse,
   WinRMHost,
 } from "./common.ts";
@@ -13,14 +13,14 @@ export class SoapClient {
     private auth: BasicAuthentication,
     private host: WinRMHost | string,
   ) {
-    this.winrmServer = constractHost(this.host);
+    this.winrmServer = constructHost(this.host);
   }
 
   async httpRequest(soap: string): Promise<HttpResponse> {
     const auth = this.getBasicAuth(this.auth.username, this.auth.password);
 
     try {
-      const respose = await fetch(this.winrmServer, {
+      const response = await fetch(this.winrmServer, {
         method: "POST",
         cache: "no-cache",
         headers: {
@@ -32,11 +32,11 @@ export class SoapClient {
         body: soap,
       });
 
-      const body = await respose.text();
+      const body = await response.text();
       return {
         body: body,
-        status: respose.status,
-        statusText: respose.statusText,
+        status: response.status,
+        statusText: response.statusText,
       };
     } catch (error) {
       return {
