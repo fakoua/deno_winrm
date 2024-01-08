@@ -313,7 +313,7 @@ Deno.test("Close Shell before open exception", () => {
   //Action
   const context = new WinRMContext(
     { username: "test", password: "test" }, //NOSONAR
-    "example.com",
+    {hostname: "example.com", port:5985, protocol: "http"}
   );
 
   //Assert
