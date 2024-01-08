@@ -31,6 +31,34 @@ const ResponseCommand = `<s:Envelope xml:lang="en-US"
   </s:Body>
 </s:Envelope>`;
 
+const ResponseErrorShellId = `<s:Envelope xml:lang="en-US" xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:x="http://schemas.xmlsoap.org/ws/2004/09/transfer" xmlns:e="http://schemas.xmlsoap.org/ws/2004/08/eventing" xmlns:n="http://schemas.xmlsoap.org/ws/2004/09/enumeration" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:p="http://schemas.microsoft.com/wbem/wsman/1/wsman.xsd">
+<s:Header>
+    <a:Action>http://schemas.dmtf.org/wbem/wsman/1/wsman/fault</a:Action>
+    <a:MessageID>uuid:2B81868F-56FA-4BD9-8904-F2D0E651F496</a:MessageID>
+    <a:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:To>
+    <a:RelatesTo>uuid:c8be6032-291f-4796-9855-dbe5fdcf1c14</a:RelatesTo>
+</s:Header>
+<s:Body>
+    <s:Fault>
+        <s:Code>
+            <s:Value>s:Sender</s:Value>
+            <s:Subcode>
+                <s:Value>w:InvalidSelectors</s:Value>
+            </s:Subcode>
+        </s:Code>
+        <s:Reason>
+            <s:Text xml:lang="en-US">Error Text</s:Text>
+        </s:Reason>
+        <s:Detail>
+            <w:FaultDetail>http://schemas.dmtf.org/wbem/wsman/1/wsman/faultDetail/UnexpectedSelectors</w:FaultDetail>
+            <f:WSManFault xmlns:f="http://schemas.microsoft.com/wbem/wsman/1/wsmanfault" Code="2150858843" Machine="windows-host">
+                <f:Message>Error Message</f:Message>
+            </f:WSManFault>
+        </s:Detail>
+    </s:Fault>
+</s:Body>
+</s:Envelope>`;
+
 Deno.test("Should run a command", async () => {
   //Setup
   mf.install();
@@ -76,13 +104,13 @@ Deno.test("ShellId Exception", async () => {
 
   mf.mock("POST@/wsman", (_req, _) => {
     if (_req.headers.get("content-length") == "1583") {
-      return new Response("ERROR", {
+      return new Response(ResponseErrorShellId, {
         status: 500,
       });
     }
 
     return new Response(`hi`, {
-      status: 200,
+      status: 500,
     });
   });
 
