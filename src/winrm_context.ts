@@ -16,7 +16,7 @@ import {
   message_shellid,
 } from "./soap_messages.ts";
 import { SoapClient } from "./soap_client.ts";
-import { decodeBase64 } from "https://deno.land/std@0.210.0/encoding/base64.ts";
+import { decodeBase64 } from "https://deno.land/std@0.211.0/encoding/base64.ts";
 
 /**
  * WinRM Class
