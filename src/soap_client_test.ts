@@ -1,7 +1,7 @@
 import { denock } from "https://deno.land/x/denock@0.2.0/mod.ts";
 import { SoapClient } from "./soap_client.ts";
-import { assertStringIncludes } from "https://deno.land/std@0.182.0/testing/asserts.ts";
-import { assertEquals } from "https://deno.land/std@0.61.0/testing/asserts.ts";
+import { assertStringIncludes } from "https://deno.land/std@0.211.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.211.0/testing/asserts.ts";
 
 function mock1() {
   denock({
