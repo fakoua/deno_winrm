@@ -1,6 +1,9 @@
 import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
 import { WinRMContext } from "./winrm_context.ts";
-import { assert, assertRejects } from "https://deno.land/std@0.211.0/assert/mod.ts";
+import {
+  assert,
+  assertRejects,
+} from "https://deno.land/std@0.211.0/assert/mod.ts";
 
 const ResponseShellId =
   `<s:Envelope xml:lang="en-US" xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:x="http://schemas.xmlsoap.org/ws/2004/09/transfer" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:rsp="http://schemas.microsoft.com/wbem/wsman/1/windows/shell" xmlns:p="http://schemas.microsoft.com/wbem/wsman/1/wsman.xsd"><s:Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/transfer/CreateResponse</a:Action><a:MessageID>uuid:A222962A-9A19-4095-AE9C-3CB8CA4BE046</a:MessageID><a:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:To><a:RelatesTo>uuid:39747994-4352-46f0-9f57-3fceecb316c6</a:RelatesTo></s:Header><s:Body><x:ResourceCreated><a:Address>http://SamFlex:5985/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd</w:ResourceURI><w:SelectorSet><w:Selector Name="ShellId">1EDE9168-37EF-4F4C-981E-F2DF879B951A</w:Selector></w:SelectorSet></a:ReferenceParameters></x:ResourceCreated><rsp:Shell xmlns:rsp="http://schemas.microsoft.com/wbem/wsman/1/windows/shell"><rsp:ShellId>1EDE9168-37EF-4F4C-981E-F2DF879B951A</rsp:ShellId><rsp:ResourceUri>http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd</rsp:ResourceUri><rsp:Owner>winrm</rsp:Owner><rsp:ClientIP>fe80::fc1e:8ede:f8f9:8c8d%4</rsp:ClientIP><rsp:IdleTimeOut>PT7200.000S</rsp:IdleTimeOut><rsp:InputStreams>stdin</rsp:InputStreams><rsp:OutputStreams>stderr stdout</rsp:OutputStreams><rsp:ShellRunTime>P0DT0H0M0S</rsp:ShellRunTime><rsp:ShellInactivity>P0DT0H0M0S</rsp:ShellInactivity></rsp:Shell></s:Body></s:Envelope>`;
@@ -102,12 +105,52 @@ Deno.test("Should run a command", async () => {
   mf.uninstall();
 });
 
+Deno.test("Should run a command with context", async () => {
+  //Setup
+  mf.install();
+
+  mf.mock("POST@/wsman", (_req, _) => {
+    if (_req.headers.get("content-length") == "1583") {
+      return new Response(ResponseShellId, {
+        status: 200,
+      });
+    }
+    if (_req.headers.get("content-length") == "1702") {
+      return new Response(ResponseCommandId, {
+        status: 200,
+      });
+    }
+
+    if (_req.headers.get("content-length") == "1553") {
+      return new Response(ResponseCommand, {
+        status: 200,
+      });
+    }
+    return new Response(`hi`, {
+      status: 200,
+    });
+  });
+
+  //Action
+  const context = new WinRMContext(
+    { username: "test", password: "test" }, //NOSONAR
+    "example.com",
+  );
+
+  await context.openShell();
+  const res = await context.runCommand("PING");
+  await context.closeShell();
+  //Assert
+  assert(!res.error);
+  mf.uninstall();
+});
+
 Deno.test("Should run powershell", async () => {
   //Setup
   mf.install();
 
   mf.mock("POST@/wsman", (_req, _) => {
-    console.log(_req.headers.get("content-length"))
+    console.log(_req.headers.get("content-length"));
     if (_req.headers.get("content-length") == "1583") {
       return new Response(ResponseShellId, {
         status: 200,
@@ -329,9 +372,9 @@ Deno.test("Open Shell twice exception", async () => {
 
   await context.openShell();
   //Assert
-  assertRejects( async (): Promise<void> => {
+  assertRejects(async (): Promise<void> => {
     await context.openShell();
-  })
+  });
   mf.uninstall();
 });
 
@@ -353,12 +396,12 @@ Deno.test("Close Shell before open exception", () => {
   //Action
   const context = new WinRMContext(
     { username: "test", password: "test" }, //NOSONAR
-    {hostname: "example.com", port:5985, protocol: "http"}
+    { hostname: "example.com", port: 5985, protocol: "http" },
   );
 
   //Assert
-  assertRejects( async (): Promise<void> => {
+  assertRejects(async (): Promise<void> => {
     await context.closeShell();
-  })
+  });
   mf.uninstall();
 });

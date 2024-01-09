@@ -1,7 +1,9 @@
 import { denock } from "https://deno.land/x/denock@0.2.0/mod.ts";
 import { SoapClient } from "./soap_client.ts";
-import { assertStringIncludes } from "https://deno.land/std@0.211.0/testing/asserts.ts";
-import { assertEquals } from "https://deno.land/std@0.211.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertStringIncludes,
+} from "https://deno.land/std@0.211.0/assert/mod.ts";
 
 function mock1() {
   denock({
@@ -43,11 +45,10 @@ function mock2() {
     replyStatus: 401,
     responseBody: "UNAUTHORIZED",
   });
-  
 }
 
 Deno.test("should make a successful HTTP POST request with valid SOAP data and return a valid HTTP response", async () => {
-  mock1()
+  mock1();
   const soap = { test: 1 };
   const soapClient = new SoapClient({
     username: "username",

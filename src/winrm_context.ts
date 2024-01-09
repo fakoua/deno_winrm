@@ -137,6 +137,22 @@ export class WinRMContext {
     return commandResponse;
   }
 
+  
+  /**
+   * Run powershell command
+   * @date 1/9/2024 - 2:53:51 PM
+   *
+   * @public
+   * @param {string} ps - PowerShell Command
+   * @example
+   * ```ts
+   * import * as winrm from "https://deno.land/x/deno_winrm/mod.ts";
+   * const context = new winrm.WinRMContext({username: "user", password: "P@as$"}, "host")
+   * const res = context.runPowerShell("Get-Acl");
+   * console.log(res)
+   * ```
+   * @returns {Promise<ShellResponse>}
+   */
   public runPowerShell(ps: string): Promise<ShellResponse> {
     const args = [];
     args.unshift(
@@ -148,6 +164,26 @@ export class WinRMContext {
     return this.runCommand(cmd);
   }
 
+  
+  /**
+   * Open a shell
+   * @date 1/9/2024 - 2:56:01 PM
+   * @description Used to run all the following commands within the same shell, you must call closeShell.
+   * @public
+   * @async
+   * @example
+   * ```ts
+   * import * as winrm from "https://deno.land/x/deno_winrm/mod.ts";
+   * const context = new winrm.WinRMContext({username: "user", password: "P@as$"}, "host")
+   * await context.openShell() // <- open a shell
+   * let res = await context.runCommand("dir")
+   * console.log(res.stdout)
+   * res = await context.runCommand("date /t")
+   * console.log(res.stdout)
+   * await context.closeShell() // <- close the shell
+   * ```
+   * @returns {Promise<boolean>}
+   */
   public async openShell(): Promise<boolean> {
     if (
       this.contextMessageId !== undefined || this.contextShellId !== undefined
@@ -169,6 +205,26 @@ export class WinRMContext {
     return false;
   }
 
+  
+  /**
+   * Close a shell
+   * @date 1/9/2024 - 2:57:32 PM
+   *
+   * @public
+   * @async
+   * @example
+   * * ```ts
+   * import * as winrm from "https://deno.land/x/deno_winrm/mod.ts";
+   * const context = new winrm.WinRMContext({username: "user", password: "P@as$"}, "host")
+   * await context.openShell() // <- open a shell
+   * let res = await context.runCommand("dir")
+   * console.log(res.stdout)
+   * res = await context.runCommand("date /t")
+   * console.log(res.stdout)
+   * await context.closeShell() // <- close the shell
+   * ```
+   * @returns {Promise<boolean>}
+   */
   public async closeShell(): Promise<boolean> {
     if (
       this.contextMessageId === undefined || this.contextShellId === undefined
