@@ -17,10 +17,10 @@ const context = new winrm.WinRMContext({
 
 const result = await context.runCommand("ipconfig /all");
 
-if (result.success) {
-  console.log(result.message);
+if (result.exitCode === 0) {
+  console.log(result.stdout);
 } else {
-  console.log(result.error?.message);
+  console.log(result.stderr);
 }
 ```
 
@@ -33,7 +33,8 @@ import * as winrm from "https://deno.land/x/deno_winrm/mod.ts";
 const context = new winrm.WinRMContext({username: "user", password: "P@as$"}, "host")
 await context.openShell() // <- open a shell
 let res = await context.runCommand("dir")
+console.log(res.stdout)
 res = await context.runCommand("date /t")
-console.log(res.message)
+console.log(res.stdout)
 await context.closeShell() // <- close the shell
 ```

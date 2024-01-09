@@ -12,6 +12,16 @@ export type CommandResponse = {
     }
 }
 
+export type ShellResponse = {
+    stdout: string,
+    stderr: string,
+    exitCode: number,
+    error?: {
+        reason?: string,
+        message?: string
+    }
+}
+
 export type BasicAuthentication = {
     username: string,
     password: string,
@@ -19,8 +29,8 @@ export type BasicAuthentication = {
 
 export type WinRMHost = {
     hostname: string,
-    port: 5985,
-    protocol: 'http',
+    port: number,
+    protocol: string,
 }
 
 export type HttpResponse = {

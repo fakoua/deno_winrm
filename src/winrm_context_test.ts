@@ -98,7 +98,47 @@ Deno.test("Should run a command", async () => {
   const res = await context.runCommand("PING");
 
   //Assert
-  assert(res.success);
+  assert(!res.error);
+  mf.uninstall();
+});
+
+Deno.test("Should run powershell", async () => {
+  //Setup
+  mf.install();
+
+  mf.mock("POST@/wsman", (_req, _) => {
+    console.log(_req.headers.get("content-length"))
+    if (_req.headers.get("content-length") == "1583") {
+      return new Response(ResponseShellId, {
+        status: 200,
+      });
+    }
+    if (_req.headers.get("content-length") == "1741") {
+      return new Response(ResponseCommandId, {
+        status: 200,
+      });
+    }
+
+    if (_req.headers.get("content-length") == "1553") {
+      return new Response(ResponseCommand, {
+        status: 200,
+      });
+    }
+    return new Response(`hi`, {
+      status: 200,
+    });
+  });
+
+  //Action
+  const context = new WinRMContext(
+    { username: "test", password: "test" }, //NOSONAR
+    "example.com",
+  );
+
+  const res = await context.runPowerShell("PING");
+
+  //Assert
+  assert(!res.error);
   mf.uninstall();
 });
 
@@ -127,7 +167,7 @@ Deno.test("ShellId Exception", async () => {
   const res = await context.runCommand("PING");
 
   //Assert
-  assert(!res.success);
+  assert(res.error);
   mf.uninstall();
 });
 
@@ -160,7 +200,7 @@ Deno.test("CommandId Exception", async () => {
   const res = await context.runCommand("PING");
 
   //Assert
-  assert(!res.success);
+  assert(res.error);
   mf.uninstall();
 });
 
@@ -199,7 +239,7 @@ Deno.test("Command Error", async () => {
   const res = await context.runCommand("PING");
 
   //Assert
-  assert(!res.success);
+  assert(res.error);
   mf.uninstall();
 });
 

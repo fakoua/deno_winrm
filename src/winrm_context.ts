@@ -7,6 +7,7 @@ import {
   CommandResponse,
   constructHost,
   HttpResponse,
+  ShellResponse,
   WinRMHost,
 } from "./common.ts";
 import {
@@ -16,7 +17,10 @@ import {
   message_shellid,
 } from "./soap_messages.ts";
 import { SoapClient } from "./soap_client.ts";
-import { decodeBase64 } from "https://deno.land/std@0.211.0/encoding/base64.ts";
+import {
+  decodeBase64,
+  encodeBase64,
+} from "https://deno.land/std@0.211.0/encoding/base64.ts";
 
 /**
  * WinRM Class
@@ -67,15 +71,15 @@ export class WinRMContext {
    *
    * const result = await context.runCommand("ipconfig /all");
    *
-   * if (result.success) {
-   *   console.log(result.message);
+   * if (result.exitCode === 0) {
+   *   console.log(result.stdout);
    * } else {
-   *   console.log(result.error?.message);
+   *   console.log(result.stderr);
    * }
    * ```
-   * @returns {Promise<CommandResponse>}
+   * @returns {Promise<ShellResponse>}
    */
-  public async runCommand(command: string): Promise<CommandResponse> {
+  public async runCommand(command: string): Promise<ShellResponse> {
     let messageId: string;
     let shellId: string;
 
@@ -86,7 +90,12 @@ export class WinRMContext {
       messageId = this.getUUID();
       const shellIdResult = await this.getShellId(messageId);
       if (!shellIdResult.success) {
-        return shellIdResult;
+        return {
+          error: shellIdResult,
+          exitCode: -200,
+          stdout: "",
+          stderr: "",
+        };
       } else {
         shellId = shellIdResult.message;
       }
@@ -99,7 +108,12 @@ export class WinRMContext {
     );
 
     if (!commandId.success) {
-      return commandId;
+      return {
+        error: commandId,
+        exitCode: -400,
+        stdout: "",
+        stderr: "",
+      };
     }
 
     const commandResponse = await this.getCommand(
@@ -111,11 +125,27 @@ export class WinRMContext {
     if (!this.isContextMode()) {
       const deleteResponse = await this.deleteShellId(messageId, shellId);
       if (!deleteResponse.success) {
-        return deleteResponse;
+        return {
+          error: deleteResponse,
+          exitCode: -300,
+          stdout: "",
+          stderr: "",
+        };
       }
     }
 
     return commandResponse;
+  }
+
+  public runPowerShell(ps: string): Promise<ShellResponse> {
+    const args = [];
+    args.unshift(
+      "powershell.exe",
+      "-encodedcommand",
+      this.toUtf16(ps),
+    );
+    const cmd = args.join(" ");
+    return this.runCommand(cmd);
   }
 
   public async openShell(): Promise<boolean> {
@@ -190,7 +220,7 @@ export class WinRMContext {
     messageId: string,
     shellId: string,
     commandId: string,
-  ): Promise<CommandResponse> {
+  ): Promise<ShellResponse> {
     const soapIn = message_command(
       this.winrmServer,
       messageId,
@@ -207,23 +237,43 @@ export class WinRMContext {
       const rResponseDocument =
         xmlDoc["s:Envelope"]["s:Body"]["rsp:ReceiveResponse"];
 
+      const exitCode = Number(
+        rResponseDocument["rsp:CommandState"]["rsp:ExitCode"],
+      );
       const streams = rResponseDocument["rsp:Stream"] as node;
 
-      let strBuilder = "";
+      let stdout = "";
+      let stderr = "";
+
       for (const key in streams) {
-        const cmd = (streams[key] as document)["#text"]?.toString();
-        if (cmd !== undefined) {
-          strBuilder = `${strBuilder}\r\n${
-            new TextDecoder().decode(decodeBase64(cmd))
-          }`;
+        const std = (streams[key] as document)["#text"]?.toString();
+        const name = (streams[key] as document)["@Name"]?.toString();
+
+        if (std !== undefined) {
+          if (name === "stdout") {
+            stdout = `${stdout}\r\n${
+              new TextDecoder().decode(decodeBase64(std))
+            }`;
+          }
+          if (name === "stderr") {
+            stderr = `${stderr}\r\n${
+              new TextDecoder().decode(decodeBase64(std))
+            }`;
+          }
         }
       }
       return {
-        message: strBuilder,
-        success: true,
+        stderr: stderr.trim(),
+        stdout: stdout.trim(),
+        exitCode: exitCode,
       };
     } else {
-      return this.processError(res);
+      return {
+        stdout: "",
+        stderr: "",
+        exitCode: -100,
+        error: this.processError(res),
+      };
     }
   }
 
@@ -314,5 +364,15 @@ export class WinRMContext {
 
   private getUUID(): string {
     return crypto.randomUUID();
+  }
+
+  private toUtf16(plain: string): string {
+    const buf = new ArrayBuffer(plain.length * 2);
+    const bufView = new Uint16Array(buf);
+    for (let i = 0, strLen = plain.length; i < strLen; i++) {
+      bufView[i] = plain.charCodeAt(i);
+    }
+    const uint8 = new Uint8Array(buf);
+    return encodeBase64(uint8);
   }
 }
