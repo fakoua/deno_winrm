@@ -1,6 +1,7 @@
 import * as log from "https://deno.land/std@0.211.0/log/mod.ts";
 import { parse } from "https://deno.land/x/xml@2.1.3/mod.ts";
 import { document, node } from "https://deno.land/x/xml@2.1.3/utils/types.ts";
+import { delay } from "https://deno.land/std@0.211.0/async/delay.ts";
 import {
   anyany,
   BasicAuthentication,
@@ -116,11 +117,28 @@ export class WinRMContext {
       };
     }
 
-    const commandResponse = await this.getCommand(
-      messageId,
-      shellId,
-      commandId.message,
-    );
+    let cmd: ShellResponse;
+    const commandResponse: ShellResponse = {
+      exitCode: -100,
+      stderr: "",
+      stdout: "",
+    };
+    let counter = 0;
+    do {
+      console.log(counter++)
+      cmd = await this.getCommand(
+        messageId,
+        shellId,
+        commandId.message,
+      );
+      commandResponse.stdout = `${commandResponse.stdout}${cmd.stdout}`;
+
+      if (cmd.state?.endsWith("Running")) {
+        await delay(100);
+      } else {
+        commandResponse.exitCode = cmd.exitCode;
+      }
+    } while (cmd.state?.endsWith("Running"));
 
     if (!this.isContextMode()) {
       const deleteResponse = await this.deleteShellId(messageId, shellId);
@@ -137,7 +155,6 @@ export class WinRMContext {
     return commandResponse;
   }
 
-  
   /**
    * Run powershell command
    * @date 1/9/2024 - 2:53:51 PM
@@ -164,7 +181,6 @@ export class WinRMContext {
     return this.runCommand(cmd);
   }
 
-  
   /**
    * Open a shell
    * @date 1/9/2024 - 2:56:01 PM
@@ -205,7 +221,6 @@ export class WinRMContext {
     return false;
   }
 
-  
   /**
    * Close a shell
    * @date 1/9/2024 - 2:57:32 PM
@@ -318,9 +333,12 @@ export class WinRMContext {
           }
         }
       }
+      const state =
+        (rResponseDocument["rsp:CommandState"] as document)["@State"];
       return {
         stderr: stderr.trim(),
         stdout: stdout.trim(),
+        state: state?.toString(),
         exitCode: exitCode,
       };
     } else {

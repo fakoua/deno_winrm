@@ -16,6 +16,7 @@ export type ShellResponse = {
     stdout: string,
     stderr: string,
     exitCode: number,
+    state?: string,
     error?: {
         reason?: string,
         message?: string
