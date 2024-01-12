@@ -119,13 +119,11 @@ export class WinRMContext {
 
     let cmd: ShellResponse;
     const commandResponse: ShellResponse = {
-      exitCode: -100,
+      exitCode: -101,
       stderr: "",
       stdout: "",
     };
-    let counter = 0;
     do {
-      console.log(counter++)
       cmd = await this.getCommand(
         messageId,
         shellId,
@@ -140,6 +138,8 @@ export class WinRMContext {
       }
     } while (cmd.state?.endsWith("Running"));
 
+    commandResponse.error = cmd.error;
+    
     if (!this.isContextMode()) {
       const deleteResponse = await this.deleteShellId(messageId, shellId);
       if (!deleteResponse.success) {

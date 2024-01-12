@@ -150,7 +150,6 @@ Deno.test("Should run powershell", async () => {
   mf.install();
 
   mf.mock("POST@/wsman", (_req, _) => {
-    console.log(_req.headers.get("content-length"));
     if (_req.headers.get("content-length") == "1583") {
       return new Response(ResponseShellId, {
         status: 200,
@@ -280,7 +279,6 @@ Deno.test("Command Error", async () => {
   );
 
   const res = await context.runCommand("PING");
-
   //Assert
   assert(res.error);
   mf.uninstall();
