@@ -135,6 +135,7 @@ export class WinRMContext {
         await delay(100);
       } else {
         commandResponse.exitCode = cmd.exitCode;
+        commandResponse.stderr = cmd.stderr;
       }
     } while (cmd.state?.endsWith("Running"));
 
@@ -301,7 +302,6 @@ export class WinRMContext {
 
     const soapClient = new SoapClient(this.auth, this.host);
     const res = await soapClient.httpRequest(soapIn);
-
     if (res.status === 200) {
       const xmlDoc = parse(res.body) as anyany;
 
